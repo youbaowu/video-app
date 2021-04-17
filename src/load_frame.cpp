@@ -1,14 +1,14 @@
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libswscale/swscale.h>
-#include <inttypes.h>
-}
+#include "video_reader.hpp"
 
 bool load_frame(const char* filename, int* width_out, int* height_out, unsigned char** data_out) {
-    
+    AVFormatContext* av_format_ctx;
+    AVCodecContext* av_codec_ctx;
+    AVFrame* av_frame;
+    AVPacket* av_packet;
+    SwsContext* sws_scaler_ctx;
+
     // Open the file using libavformat
-    AVFormatContext* av_format_ctx = avformat_alloc_context();
+    av_format_ctx = avformat_alloc_context();
     if (!av_format_ctx) {
         printf("Couldn't creted AVFormatContext\n");
         return false;
@@ -44,7 +44,7 @@ bool load_frame(const char* filename, int* width_out, int* height_out, unsigned 
     }
     
     // Set up a codec context for the decoder
-    AVCodecContext* av_codec_ctx = avcodec_alloc_context3(av_codec);
+    av_codec_ctx = avcodec_alloc_context3(av_codec);
     if (!av_codec_ctx) {
         printf("Couldn't create AVCodecContext\n");
         return false;
@@ -60,12 +60,12 @@ bool load_frame(const char* filename, int* width_out, int* height_out, unsigned 
         return false;
     }
     
-    AVFrame* av_frame = av_frame_alloc();
+    av_frame = av_frame_alloc();
     if (!av_frame) {
         printf("Couldn't allocate AVFrame\n");
         return false;
     }
-    AVPacket* av_packet = av_packet_alloc();
+    av_packet = av_packet_alloc();
     if (!av_packet) {
         printf("Couldn't allocate AVPacket\n");
         return false;
@@ -97,7 +97,7 @@ bool load_frame(const char* filename, int* width_out, int* height_out, unsigned 
     
     uint8_t*data = new uint8_t[av_frame->width * av_frame->height * 4];
     
-    SwsContext* sws_scaler_ctx = sws_getContext(av_frame->width, av_frame->height, av_codec_ctx->pix_fmt,
+    sws_scaler_ctx = sws_getContext(av_frame->width, av_frame->height, av_codec_ctx->pix_fmt,
                                                 av_frame->width, av_frame->height, AV_PIX_FMT_RGB0,
                                                 SWS_BILINEAR, NULL, NULL, NULL);
     if (!sws_scaler_ctx) {
