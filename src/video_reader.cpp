@@ -26,21 +26,22 @@ bool video_reader_open(VideoReaderState* state, const char* filename) {
         return false;
     }
     
-    AVDictionary* options = NULL;
-    av_dict_set(&options, "framerate", "25", 0);
+    // record webcam
+//    AVDictionary* options = NULL;
+//    av_dict_set(&options, "framerate", "25", 0);
 //    av_dict_set(&options, "video_size", "1280x720", 0);
-    av_dict_set(&options, "pixel_fmt", "rgb0", 0);
-    
-    if (avformat_open_input(&av_format_ctx, "default:none", av_input_format, &options) != 0) {
-        printf("Couldn't open video file\n");
-        return false;
-    }
-    
-    // open local file
-//    if (avformat_open_input(&av_format_ctx, filename, NULL, NULL) != 0) {
+//    av_dict_set(&options, "pixel_fmt", "rgb0", 0);
+//
+//    if (avformat_open_input(&av_format_ctx, "default:none", av_input_format, &options) != 0) {
 //        printf("Couldn't open video file\n");
 //        return false;
 //    }
+    
+    // open local file
+    if (avformat_open_input(&av_format_ctx, filename, NULL, NULL) != 0) {
+        printf("Couldn't open video file\n");
+        return false;
+    }
     
     // Find the first valid video stream inside the file
     video_stream_index = -1;
@@ -163,6 +164,10 @@ bool video_reader_read_frame(VideoReaderState* state, uint8_t* frame_bufer, int6
     sws_scale(sws_scaler_ctx, av_frame->data, av_frame->linesize, 0, av_frame->height, dest, dest_linesize);
     
     return true;
+}
+
+void video_reader_seek_frame(VideoReaderState* state, int64_t ts) {
+    av_seek_frame(state->av_format_ctx, state->video_stream_index, ts, 0);
 }
 
 void video_reader_close(VideoReaderState* state) {
